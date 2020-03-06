@@ -187,7 +187,7 @@ class RBM:
                 error_sum = error_sum/num_minibatches
                 if verbose>0:
                     print("Reconstruction MSE = ",error_sum)
-                if abs(error_sum - error_log)/error_sum < 0.005:
+                if (abs(error_sum - error_log)/error_sum < 0.01) or (abs(error_sum - error_log) < 0.005):
                     break
                 error_log = error_sum
                 error_sum = 0.

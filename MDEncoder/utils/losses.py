@@ -16,13 +16,13 @@ def embedded_loss(f_dim,l_dim):
         #factor of 2 from the symmetric distance matrix
         D1 = (na - 2*tf.matmul(y_true, y_true, False, True) + nb)/f_dim/2
         d_min = tf.convert_to_tensor(1e-10,dtype=D1.dtype.base_dtype)
-        d_max = tf.convert_to_tensor(4.0,dtype=D1.dtype.base_dtype)
+        d_max = tf.convert_to_tensor(40.0,dtype=D1.dtype.base_dtype)
         D1 = tf.sqrt(tf.clip_by_value(D1,d_min,d_max))
                      
         na2 = tf.reduce_sum(tf.square(y_pred), 1)
         nb2 = tf.reduce_sum(tf.square(y_pred), 1)
     
-        # na as a row and nb as a co"lumn vectors
+        # na as a row and nb as a column vectors
         na2 = tf.reshape(na2, [-1, 1])
         nb2 = tf.reshape(nb2, [1, -1])
 
@@ -35,6 +35,12 @@ def embedded_loss(f_dim,l_dim):
         return mbe  
     return embedded_loss
 
+def RFVE_metric(y_true, y_pred):
+    sse = K.sum(K.square(y_true-y_pred))
+    _epsilon = tf.convert_to_tensor(1e-7,dtype=sse.dtype.base_dtype)
+    sst = K.sum(K.square(y_true-K.mean(y_true)))
+    return sse/(sst+_epsilon)
+    
 def RV_metric(y_true, y_pred):
 
     # squared norms of each row in A and B
@@ -55,6 +61,6 @@ def RV_metric(y_true, y_pred):
         
     dist_raw = dist_raw - K.mean(dist_raw)
     dist_emb = dist_emb - K.mean(dist_emb)
-    r = K.sum(dist_raw*dist_emb)/(K.sqrt(K.sum(K.square(dist_raw))*K.sum(K.square(dist_emb)))+_epsilon)
+    r = K.sum(dist_raw*dist_emb)/(tf.sqrt(tf.maximum( K.sum(K.square(dist_raw))*K.sum(K.square(dist_emb)) , 0.0 ))+_epsilon)
     
     return 1-r**2

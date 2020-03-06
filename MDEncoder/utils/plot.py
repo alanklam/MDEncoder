@@ -18,11 +18,13 @@ def plot_energy(xdata,ydata,frame=[],fname='',xylab=('X','Y'),xscale=(-1,1,0.2),
     
     for n, f in enumerate(frame):
         plt.text(x[f],y[f], str(n+1) ,fontsize=26)
-        
+    
+    def rounding(x):
+        return int(x*10)/10
     plt.xlabel(xylab[0],fontsize=22)
     plt.ylabel(xylab[1],fontsize=22)
-    plt.xticks(np.arange(xscale[0],xscale[1]+xscale[2],step=xscale[2]),fontsize=15)
-    plt.yticks(np.arange(yscale[0],yscale[1]+yscale[2],step=yscale[2]),fontsize=15)
+    plt.xticks(np.arange(rounding(xscale[0]),rounding(xscale[1])+xscale[2],step=xscale[2]),fontsize=15)
+    plt.yticks(np.arange(rounding(yscale[0]),rounding(yscale[1])+yscale[2],step=yscale[2]),fontsize=15)
     plt.xlim([xscale[0],xscale[1]])
     plt.ylim([yscale[0],yscale[1]])
     plt.tight_layout()

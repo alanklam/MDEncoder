@@ -144,7 +144,7 @@ class RBM_with_linear_hidden_units(RBM):
                 error_sum = error_sum/num_minibatches
                 if verbose>0:
                     print("Reconstruction MSE = ",error_sum)
-                if abs(error_sum - error_log)/error_sum < 0.005:
+                if (abs(error_sum - error_log)/error_sum < 0.01) or (abs(error_sum - error_log) < 0.005):
                     break
                 error_log = error_sum
                 error_sum = 0.
@@ -163,7 +163,8 @@ class RBM_with_linear_hidden_units(RBM):
             v = np.random.binomial(1,v_probs)
 
         h_probs  = self.h_probs(v)
-        h_states = np.random.binomial(1,h_probs)
+        #h_states = np.random.binomial(1,h_probs)
+        h_states = h_probs + np.random.normal(0.,1.,size = h_probs.shape) # this line changes
         for i in range(n):
             v_probs  = self.v_probs(h_states)
             v_states = np.random.binomial(1,v_probs)
