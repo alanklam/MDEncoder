@@ -14,4 +14,4 @@ cd /path/to/directory/MDEncoder
 pip install -e .
 ```
 ## Tutorial
-Please refer to the Jupyter notebook files under the tutorial folder in this repository.
+Please refer to the Jupyter notebook files under the examples folder in this repository.
