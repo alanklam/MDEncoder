@@ -22,10 +22,10 @@ class Autoencoder:
         '''
             Inputs:
 
-            - layer_dims = A list of the layer sizes, visible first, latent last
-
-            Note that the number of hidden layers in the unrolled autoencoder 
-            will be twice the length of layer_dims. 
+            - layer_dims = A list of the layer sizes, input layer first, latent last
+            layer_dims includes only layers in a encoder network
+            - verbose = 1 prints model information
+            
         '''
         self.verbose = verbose
         self.latent_dim = layer_dims[-1]
@@ -48,7 +48,6 @@ class Autoencoder:
         '''
             Initialize with pretrained weights from a file.
 
-            Still needs to be unrolled.
         '''
         i = 0
         weights = []
@@ -75,7 +74,7 @@ class Autoencoder:
         '''
             Greedy layer-wise training
             
-            The last layer is a RBM with linear hidden units
+            By default, assume the first and last layer are with real values units
 
             shape(x) = (v_dim, number_of_examples)
         '''
@@ -113,10 +112,10 @@ class Autoencoder:
     
     def unroll(self,sparse):
         '''
-            Unrolls the pretrained RBM network into a DFF keras model 
-            and sets hidden layer parameters to pretrained values.
+            Unrolls the pretrained RBM network into a keras model 
+            and sets weight matrices to pretrained values.
 
-            Returns the keras model
+            Returns the keras models (full autoencoder, encoder, decoder networks)
         '''
         if self.pretrained == False:
             print("Model not pretrained.")
@@ -201,19 +200,64 @@ class Autoencoder:
         outputs = decoder(encoder(inputs))
         autoencoder = Model(inputs=inputs,outputs=[outputs,embedded])
         return autoencoder, encoder, decoder
+
+    def build_model(self,sparse):
+        '''
+            Returns keras models for autoencoder network, without pretraining
+            Initialize weight values by glorot_uniform
+        '''
+        if self.verbose>0:
+        	print("No RBM pretraining, initialize connection weight randomly.")
+
+        # define keras model structure
+        inputs = Input(shape=(self.v_dim,))
+        x = inputs
+
+        # build encoder
+        for i in range(self.num_hidden_layers):
+            #last layer: linear activation
+            if (i == self.num_hidden_layers - 1):
+                embed_dim = self.layer_dims[i+1]
+                embedded = Dense(embed_dim, activation=None,
+                	activity_regularizer=regularizers.l1(sparse), name='embedded')(x)
+            elif (i <= self.num_hidden_layers - 2):
+                #layers before second last hidden layer use Batch Normalization
+                if self.num_hidden_layers>2:
+                    x = Dense(self.layer_dims[i+1], 
+                              activation=None,
+                              activity_regularizer=regularizers.l1(sparse))(x)
+                    x = BatchNormalization()(x)
+                    x = Activation('relu')(x)
+                else:
+                    x = Dense(self.layer_dims[i+1], 
+                              activation='relu',
+                              activity_regularizer=regularizers.l1(sparse))(x)
+        encoder = Model(inputs,embedded)
+        
+        embedded_input = Input(shape=(embed_dim,))
+        y = embedded_input
+        # build decoder
+        for i in range(self.num_hidden_layers):
+            #last layer no activation
+            if (i == self.num_hidden_layers - 1):
+                y = Dense(self.layer_dims[self.num_hidden_layers-i-1],
+                          activation=None)(y)
+            elif (i <= self.num_hidden_layers - 2):
+                #layers before second last hidden layer use Batch Normalization
+                if self.num_hidden_layers>2:
+                    y = Dense(self.layer_dims[self.num_hidden_layers-i-1], 
+                              activation=None,
+                              activity_regularizer=regularizers.l1(sparse))(y)
+                    y = BatchNormalization()(y)
+                    y = Activation('relu')(y)
+                else:
+                    y = Dense(self.layer_dims[self.num_hidden_layers-i-1], 
+                              activation='relu',
+                              activity_regularizer=regularizers.l1(sparse))(y)
+                
+        decoder = Model(embedded_input, y, name='reconstruct')
     
-    def save(self,filename):
-        '''
-            saves the pretrained weights. Saving and loading a keras model 
-            after pretraining is better done directly to the self.autoencoder
-            object using the keras fnctions save() and load_model()
-        '''
+        outputs = decoder(encoder(inputs))
+        autoencoder = Model(inputs=inputs,outputs=[outputs,embedded])
+        return autoencoder, encoder, decoder
 
-        if self.pretrained == True:
-            for i in range(self.num_hidden_layers):
-                weights = {"W":self.W[i],'a':self.a[i],'b':self.b[i]}
-                RBM.save_weights(weights,filename+"_"+str(i))
-        else: 
-            print("No pretrained weights to save.")
-
-        return

@@ -61,8 +61,11 @@ class MDEncoder:
         if not restart:
             K.clear_session()
             self.model = Autoencoder(layer_dims = self.layer_dims, verbose=verbose)
-            self.model.pretrain(np.transpose(x_train), epochs = epochs[0], num_samples = x_train.shape[0], batch_size=self.batch_size)
-            self.autoencoder, self.encoder, self.decoder = self.model.unroll(self.sparse)
+            if epochs[0]>0:
+                self.model.pretrain(np.transpose(x_train), epochs = epochs[0], num_samples = x_train.shape[0], batch_size=self.batch_size)
+                self.autoencoder, self.encoder, self.decoder = self.model.unroll(self.sparse)
+            else:
+                self.autoencoder, self.encoder, self.decoder = self.model.build_model(self.sparse)
         
         loss_dict = {'reconstruct':'mse','embedded': embedded_loss(f_dim=self.layer_dims[0],l_dim=self.layer_dims[-1]) }
         metric_dict = {'reconstruct':RFVE_metric,'embedded': RV_metric}
@@ -96,9 +99,12 @@ class MDEncoder:
             plt.figure()
             plt.plot(history.history['loss'],linewidth=3,linestyle='--',color='b',label='Train loss')
             plt.plot(history.history['val_loss'],linewidth=3,linestyle='--',color='r',label='Val loss')
-            #plt.plot(history.history['val_embedded_embedded_loss'],linewidth=3,color='r',label='Val loss')
-            #plt.plot(history.history['embedded_RV_metric'],linewidth=3,color='b',label='Train RV')
-            #plt.plot(history.history['val_embedded_RV_metric'],linewidth=3,color='r',label='Val RV')
+            plt.xlabel('Epochs',fontsize=18)
+            plt.ylabel('Loss',fontsize=18)
+            plt.legend(fontsize=15)
+            plt.figure()
+            plt.plot(history.history['val_embedded_RV_metric'],linewidth=3,color='r',label='Val RV')
+            plt.plot(history.history['val_reconstruct_RFVE_metric'],linewidth=3,color='b',label='Val RFVE')
             plt.xlabel('Epochs',fontsize=18)
             plt.ylabel('Loss',fontsize=18)
             plt.legend(fontsize=15)
