@@ -82,14 +82,16 @@ class Autoencoder:
         if self.num_hidden_layers == 1: # initialize RBM's
             RBM_layers.append(RBM_with_linear_units(self.layer_dims[0],self.layer_dims[1]))
         else:
-            for i in range(self.num_hidden_layers): 
-                if (i < self.num_hidden_layers - 1):
-                    if i==0:
-                        RBM_layers.append(RBM_with_linear_visible_units(self.layer_dims[i],self.layer_dims[i+1]))
-                    else:    
-                        RBM_layers.append(RBM(self.layer_dims[i],self.layer_dims[i+1]))
-                else:
-                    RBM_layers.append(RBM_with_linear_hidden_units(self.layer_dims[i],self.layer_dims[i+1]))
+            for i in range(self.num_hidden_layers):
+                #print("Using linear units RBM")
+                RBM_layers.append(RBM_with_linear_units(self.layer_dims[i],self.layer_dims[i+1])) 
+                #if (i < self.num_hidden_layers - 1):
+                #    if i==0:
+                #        RBM_layers.append(RBM_with_linear_visible_units(self.layer_dims[i],self.layer_dims[i+1]))
+                #    else:    
+                #        RBM_layers.append(RBM(self.layer_dims[i],self.layer_dims[i+1]))
+                #else:
+                #    RBM_layers.append(RBM_with_linear_hidden_units(self.layer_dims[i],self.layer_dims[i+1]))
 
         for i in range(self.num_hidden_layers):  # train RBM's 
             if self.verbose>0:
@@ -135,7 +137,7 @@ class Autoencoder:
                 if False:
                     x = Dense(embed_dim,
                               activation=None,
-                              activity_regularizer=regularizers.l1(sparse),
+                              kernel_regularizer=regularizers.l2(sparse),
                               weights = weights)(x)
                     x = BatchNormalization()(x)
                     embedded = Activation('tanh',name='embedded')(x)
@@ -143,15 +145,15 @@ class Autoencoder:
                     #print("linear")
                     embedded = Dense(embed_dim,
                               activation=None,
-                              activity_regularizer=regularizers.l1(sparse),
+                              kernel_regularizer=regularizers.l2(sparse),
                               weights = weights, name='embedded')(x)
             elif (i <= self.num_hidden_layers - 2):
                 #layers before second last hidden layer use Batch Normalization
-                if self.num_hidden_layers>2:
+                if self.num_hidden_layers>2 and False:
                     #print("Adding BN")
                     x = Dense(self.layer_dims[i+1], 
                               activation=None,
-                              activity_regularizer=regularizers.l1(sparse),
+                              kernel_regularizer=regularizers.l2(sparse),
                               weights = weights)(x)
                     x = BatchNormalization()(x)
                     x = Activation('relu')(x)
@@ -160,7 +162,7 @@ class Autoencoder:
                     #print("No BN")
                     x = Dense(self.layer_dims[i+1], 
                               activation='relu',
-                              activity_regularizer=regularizers.l1(sparse),
+                              kernel_regularizer=regularizers.l2(sparse),
                               weights = weights)(x)
         encoder = Model(inputs,embedded)
         
@@ -179,11 +181,11 @@ class Autoencoder:
                           weights = weights)(y)
             elif (i <= self.num_hidden_layers - 2):
                 #layers before second last hidden layer use Batch Normalization
-                if self.num_hidden_layers>2:
+                if self.num_hidden_layers>2 and False:
                     #print("Adding BN")
                     y = Dense(self.layer_dims[self.num_hidden_layers-i-1], 
                               activation=None,
-                              activity_regularizer=regularizers.l1(sparse),
+                              kernel_regularizer=regularizers.l2(sparse),
                               weights = weights)(y)
                     y = BatchNormalization()(y)
                     y = Activation('relu')(y)
@@ -192,7 +194,7 @@ class Autoencoder:
                     #sigmoid for binary feature selection
                     y = Dense(self.layer_dims[self.num_hidden_layers-i-1], 
                               activation='relu',
-                              activity_regularizer=regularizers.l1(sparse),
+                              kernel_regularizer=regularizers.l2(sparse),
                               weights = weights)(y)
                 
         decoder = Model(embedded_input, y, name='reconstruct')
@@ -219,19 +221,19 @@ class Autoencoder:
             if (i == self.num_hidden_layers - 1):
                 embed_dim = self.layer_dims[i+1]
                 embedded = Dense(embed_dim, activation=None,
-                	activity_regularizer=regularizers.l1(sparse), name='embedded')(x)
+                	kernel_regularizer=regularizers.l2(sparse), name='embedded')(x)
             elif (i <= self.num_hidden_layers - 2):
                 #layers before second last hidden layer use Batch Normalization
                 if self.num_hidden_layers>2:
                     x = Dense(self.layer_dims[i+1], 
                               activation=None,
-                              activity_regularizer=regularizers.l1(sparse))(x)
+                              kernel_regularizer=regularizers.l2(sparse))(x)
                     x = BatchNormalization()(x)
                     x = Activation('relu')(x)
                 else:
                     x = Dense(self.layer_dims[i+1], 
                               activation='relu',
-                              activity_regularizer=regularizers.l1(sparse))(x)
+                              kernel_regularizer=regularizers.l2(sparse))(x)
         encoder = Model(inputs,embedded)
         
         embedded_input = Input(shape=(embed_dim,))
@@ -247,13 +249,13 @@ class Autoencoder:
                 if self.num_hidden_layers>2:
                     y = Dense(self.layer_dims[self.num_hidden_layers-i-1], 
                               activation=None,
-                              activity_regularizer=regularizers.l1(sparse))(y)
+                              kernel_regularizer=regularizers.l2(sparse))(y)
                     y = BatchNormalization()(y)
                     y = Activation('relu')(y)
                 else:
                     y = Dense(self.layer_dims[self.num_hidden_layers-i-1], 
                               activation='relu',
-                              activity_regularizer=regularizers.l1(sparse))(y)
+                              kernel_regularizer=regularizers.l2(sparse))(y)
                 
         decoder = Model(embedded_input, y, name='reconstruct')
     

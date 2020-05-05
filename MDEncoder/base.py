@@ -54,10 +54,12 @@ class MDEncoder:
         self.decoder.save_weights(f'{path}/decoder.h5')
         print("Model saved!")
 
-    def fit(self,x_train,x_test,output_path=".",epochs=(100,200),verbose=2,sample_weight=None,save_files=True,show_losses=True,loss_history=False,restart=False):
+    def fit(self,x_train,x_test,output_path=".",epochs=(100,200),verbose=2,xyz_dim=None,sample_weight=None,save_files=True,show_losses=True,loss_history=False,restart=False):
         if not os.path.exists(output_path):
             os.makedirs(output_path)
         #skip initial pretraining if restart from current model
+        if not xyz_dim:
+            xyz_dim = 0
         if not restart:
             K.clear_session()
             self.model = Autoencoder(layer_dims = self.layer_dims, verbose=verbose)
@@ -67,8 +69,8 @@ class MDEncoder:
             else:
                 self.autoencoder, self.encoder, self.decoder = self.model.build_model(self.sparse)
         
-        loss_dict = {'reconstruct':'mse','embedded': embedded_loss(f_dim=self.layer_dims[0],l_dim=self.layer_dims[-1]) }
-        metric_dict = {'reconstruct':RFVE_metric,'embedded': RV_metric}
+        loss_dict = {'reconstruct':'mse','embedded': embedded_loss(f_dim=self.layer_dims[0],l_dim=self.layer_dims[-1],xyz_dim=xyz_dim) }
+        metric_dict = {'reconstruct':RFVE_metric,'embedded': RV_metric(xyz_dim=xyz_dim)}
         #metric_dict = {'reconstruct':'mse', 'embedded': embedded_loss(f_dim=self.layer_dims[0],l_dim=self.layer_dims[-1])}
         if sample_weight is not None:
             weight_list = [sample_weight,sample_weight]

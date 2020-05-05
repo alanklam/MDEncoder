@@ -173,10 +173,11 @@ class RBM_with_linear_units(RBM):
         if v is None:
             v_probs = np.full((self.v_dim,m),0.5)
             #v = np.random.binomial(1,v_probs)
-            v_probs + np.random.normal(0.,1.,size = v_probs.shape) # this line changes
+            v = v_probs + np.random.normal(0.,1.,size = v_probs.shape) # this line changes
 
         h_probs  = self.h_probs(v)
-        h_states = np.random.binomial(1,h_probs)
+        #h_states = np.random.binomial(1,h_probs)
+        h_states = h_probs + np.random.normal(0.,1.,size = h_probs.shape) # this line changes
         for i in range(n):
             v_probs  = self.v_probs(h_states)
             v_states = v_probs + np.random.normal(0.,1.,size = v_probs.shape) # this line changes

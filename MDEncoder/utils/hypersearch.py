@@ -26,7 +26,7 @@ class hyperoptsearchCV():
         pickle.dump((self.space,self.__dict__), open(file,"wb"))
         print("Hyperopt search object saved to %s!" % file)
 
-    def fit(self, data , sample_weight=None):
+    def fit(self, data , xyz_dim=0, sample_weight=None):
 
         def CV_function(param_set):
             model = MDEncoder(**param_set)
@@ -37,7 +37,7 @@ class hyperoptsearchCV():
                     weight = sample_weight[train_index]
                 else:
                     weight = None
-                history = model.fit(data[train_index], data[test_index], save_files=False, sample_weight=weight, epochs= self.search_param['epochs'], verbose=self.search_param['verbose'], show_losses=False,loss_history=True)
+                history = model.fit(data[train_index], data[test_index], save_files=False, xyz_dim=xyz_dim, sample_weight=weight, epochs= self.search_param['epochs'], verbose=self.search_param['verbose'], show_losses=False,loss_history=True)
                 total_score = np.array(history.history['val_embedded_RV_metric'])+np.array(history.history['val_reconstruct_RFVE_metric'])
                 #total_score = np.array(history.history['val_embedded_RV_metric'])
                 #total_score = np.array(history.history['val_reconstruct_RFVE_metric'])
