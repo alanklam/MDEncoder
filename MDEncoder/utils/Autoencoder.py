@@ -224,7 +224,7 @@ class Autoencoder:
                 	kernel_regularizer=regularizers.l2(sparse), name='embedded')(x)
             elif (i <= self.num_hidden_layers - 2):
                 #layers before second last hidden layer use Batch Normalization
-                if self.num_hidden_layers>2:
+                if self.num_hidden_layers>2 and False:
                     x = Dense(self.layer_dims[i+1], 
                               activation=None,
                               kernel_regularizer=regularizers.l2(sparse))(x)
@@ -246,7 +246,7 @@ class Autoencoder:
                           activation=None)(y)
             elif (i <= self.num_hidden_layers - 2):
                 #layers before second last hidden layer use Batch Normalization
-                if self.num_hidden_layers>2:
+                if self.num_hidden_layers>2 and False:
                     y = Dense(self.layer_dims[self.num_hidden_layers-i-1], 
                               activation=None,
                               kernel_regularizer=regularizers.l2(sparse))(y)
