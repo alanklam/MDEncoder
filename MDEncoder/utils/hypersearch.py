@@ -6,7 +6,7 @@ from ..base import *
 
 class hyperoptsearchCV():
 
-    def __init__(self, space, n_splits=3,random=0,verbose=0,epochs=(50,100),max_evals=100):
+    def __init__(self, space, n_splits=3,random=0,verbose=0,epochs=(20,150),max_evals=100):
         self.space = space
         self.best = None
         self.best_param = None
