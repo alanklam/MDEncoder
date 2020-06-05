@@ -208,7 +208,6 @@ def find_ZTS(df,refine_dims=[],frame=[],initial_pt=[],mid_pt=[],mid_index=None,n
             #pts = np.vstack([interp1d(arclength,pts[:,0])(np.linspace(0,1,2*npts)), interp1d(arclength,pts[:,1])(np.linspace(0,1,2*npts))]).T
             pts = np.vstack([interp1d(arclength,pts[:,0])(np.linspace(0,1,n_samples)), interp1d(arclength,pts[:,1])(np.linspace(0,1,n_samples))]).T
             if i % 20 and plots:
-                #print(i, np.sum(griddata(gridpoints,z.flatten(),(pts[:,0],pts[:,1]), method='linear')))
                 #This draws the intermediate states to visualize how the string evolves.
                 #ax.plot(pts[:,0],pts[:,1],color='r',marker='x',linestyle='--')
                 ax.plot(pts[:,0],pts[:,1], color=plt.cm.spring(i/float(stepmax)))
@@ -255,13 +254,14 @@ def find_ZTS(df,refine_dims=[],frame=[],initial_pt=[],mid_pt=[],mid_index=None,n
         pmf_input = True
     else:
         pmf_input = False
-        
+    #initialize endpoints with specified frames in the dataset    
     if len(frame)>0:
         pt1 = df.iloc[frame[0]].to_numpy()
         pt2 = df.iloc[frame[1]].to_numpy()
     else:
         pt1 = initial_pt[0]
         pt2 = initial_pt[1]
+    #interpolate string between specified points
     if len(mid_pt)>0:
         if len(mid_index)>0:
             pts =  mid_pt + [pt2]
@@ -344,6 +344,8 @@ def find_ZTS(df,refine_dims=[],frame=[],initial_pt=[],mid_pt=[],mid_index=None,n
     return string
 
 def PMF_string(input_data,string,fname="",pmf_input=False,reparam_n=0,yscale=(0,6,1),bins=50, Temperature=300, outPMF=False):
+	##calculate PMF (in 2D) values along a given string
+	#input_data - raw coordinate data or 2D PMF matrix (pmf_input=True)
     def pmf(xdata,ydata,bins):
         x , y = xdata , ydata
         h , xe, ye = np.histogram2d(x,y,bins=bins,range=[[np.min(x)-0.02,np.max(x)+0.02],[np.min(y)-0.02,np.max(y)+0.02]])
@@ -379,11 +381,16 @@ def PMF_string(input_data,string,fname="",pmf_input=False,reparam_n=0,yscale=(0,
         gridpoints = np.vstack([x.flatten(),y.flatten()]).T
     
     fig, ax = plt.subplots(1,1)
+    #interpolate between points along the string
     if reparam_n>0:
+    	#normalized each dim before reparameterization
+    	st_lims = np.max(string,axis=0) - np.min(string,axis=0)
+    	string /= st_lims
         arclength = np.hstack([0,np.cumsum(np.linalg.norm(string[1:] - string[:-1],axis=1))])
         arclength /= arclength[-1]
         string = np.vstack([interp1d(arclength,string[:,0])(np.linspace(0,1,reparam_n)), interp1d(arclength,string[:,1])(np.linspace(0,1,reparam_n))]).T
         n_samples = reparam_n
+        string *= st_lims
     xpts, ypts = np.linspace(0,1,n_samples) , griddata(gridpoints,z.flatten(),(string[:,0],string[:,1]), method='linear')
     ax.plot(xpts,ypts)
     plt.yticks(np.arange(rounding(yscale[0]),rounding(yscale[1])+yscale[2],step=yscale[2]),fontsize=15)
